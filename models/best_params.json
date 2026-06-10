@@ -1,0 +1,13 @@
+{
+  "iterations": 590,
+  "learning_rate": 0.01414,
+  "depth": 3,
+  "l2_leaf_reg": 2.826,
+  "border_count": 59,
+  "class_weights": [
+    1.458,
+    1.0
+  ],
+  "random_seed": 42,
+  "verbose": 0
+}
