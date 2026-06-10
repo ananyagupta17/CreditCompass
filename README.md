@@ -1,12 +1,3 @@
----
-title: CreditCompass
-emoji: 🧭
-colorFrom: indigo
-colorTo: blue
-sdk: docker
-app_port: 7860
----
-
 # CreditCompass
 
 ### Explainable Loan Eligibility Prediction
