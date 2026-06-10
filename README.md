@@ -1,3 +1,12 @@
+---
+title: CreditCompass
+emoji: 🧭
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+---
+
 # CreditCompass
 
 An end-to-end ML web application that predicts loan eligibility and explains every decision using SHAP.  
@@ -5,7 +14,7 @@ Built with CatBoost, Flask, and deployed on Hugging Face Spaces.
 
 ## Live Demo
 
-[Link](https://loan-prediction-h1bh.onrender.com/) (hosted on Render)
+**[https://huggingface.co/spaces/ananyagupta17/CreditCompass](https://huggingface.co/spaces/ananyagupta17/CreditCompass)**
 
 ---
 
@@ -72,7 +81,7 @@ This project solves that using supervised learning to classify loan approvals ba
 | Frontend     | HTML, CSS, Tailwind |
 | Backend      | Flask               |
 | ML Framework | CatBoost            |
-| Deployment   | Render              |
+| Deployment   | Hugging Face Spaces (Docker) |
 
 ## Web App (Flask)
 
