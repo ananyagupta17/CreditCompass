@@ -9,21 +9,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Install huggingface_hub CLI
-        run: pip install huggingface_hub[cli]
+      - name: Install huggingface_hub
+        run: pip install huggingface_hub
 
       - name: Upload to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          hf upload ananyagupta17/CreditCompass . . \
-            --repo-type space \
-            --token $HF_TOKEN \
-            --exclude "venv/*" \
-            --exclude "catboost_info/*" \
-            --exclude "Notebooks/*" \
-            --exclude "__pycache__/*" \
-            --exclude ".git/*"
+          python - <<'EOF'
+          import os
+          from huggingface_hub import HfApi
+
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          api.upload_folder(
+              folder_path=".",
+              repo_id="ananyagupta17/CreditCompass",
+              repo_type="space",
+              ignore_patterns=[
+                  "Notebooks/", "data/", "outputs/", "venv/",
+                  ".git/", "__pycache__/", "*.pyc", ".DS_Store",
+                  "catboost_info/", "scripts/", "assets/",
+              ],
+          )
+          print("Upload complete.")
+          EOF
