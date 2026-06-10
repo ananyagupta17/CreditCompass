@@ -11,6 +11,20 @@ from src.preprocessing import preprocess_data
 
 app = Flask(__name__)
 
+
+def format_inr(n):
+    s = str(int(n))
+    if len(s) <= 3:
+        return s
+    result = s[-3:]
+    s = s[:-3]
+    while s:
+        result = s[-2:] + ',' + result
+        s = s[:-2]
+    return result.lstrip(',')
+
+app.jinja_env.filters['inr'] = format_inr
+
 with open("models/catboost_model.pkl", "rb") as f:
     model = pickle.load(f)
 
@@ -46,6 +60,7 @@ def index():
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    loan_amount_rupees = float(request.form["LoanAmount"])
     user_input = {
         "Gender":           request.form["Gender"],
         "Married":          request.form["Married"],
@@ -54,7 +69,7 @@ def predict():
         "Self_Employed":    request.form["Self_Employed"],
         "ApplicantIncome":  float(request.form["ApplicantIncome"]),
         "CoapplicantIncome": float(request.form["CoapplicantIncome"]),
-        "LoanAmount":       float(request.form["LoanAmount"]),
+        "LoanAmount":       loan_amount_rupees / 1000,
         "Loan_Amount_Term": float(request.form["Loan_Amount_Term"]),
         "Credit_History":   float(request.form["Credit_History"]),
         "Property_Area":    request.form["Property_Area"],
@@ -96,7 +111,7 @@ def predict():
         supporting=supporting,
         opposing=opposing,
         applicant_income=int(user_input["ApplicantIncome"]),
-        loan_amount=int(user_input["LoanAmount"]),
+        loan_amount=int(loan_amount_rupees),
         loan_term=int(user_input["Loan_Amount_Term"]),
         credit_history="Yes" if user_input["Credit_History"] == 1.0 else "No",
     )
