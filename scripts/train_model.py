@@ -4,19 +4,35 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 import os
-import numpy as np
+import json
 import pandas as pd
 import pickle
 from src.preprocessing import preprocess_data
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
-from sklearn.metrics import classification_report, make_scorer, f1_score, roc_auc_score
+from sklearn.metrics import classification_report, make_scorer, f1_score
 from catboost import CatBoostClassifier
 
-THRESHOLD = 0.36
+THRESHOLD = 0.50
+
+DEFAULT_PARAMS = {
+    "iterations":    300,
+    "learning_rate": 0.03,
+    "depth":         5,
+    "class_weights": [2, 1],
+    "random_seed":   42,
+    "verbose":       0,
+}
 
 
-def threshold_predict(estimator, X):
-    return (estimator.predict_proba(X)[:, 1] >= THRESHOLD).astype(int)
+def load_params():
+    path = "models/best_params.json"
+    if os.path.exists(path):
+        with open(path) as f:
+            params = json.load(f)
+        print(f"Loaded tuned params from {path}")
+        return params
+    print("No best_params.json found — using defaults. Run scripts/tune_model.py first for best results.")
+    return DEFAULT_PARAMS
 
 
 def main():
@@ -26,25 +42,17 @@ def main():
     X = df.drop('Loan_Status', axis=1)
     y = df['Loan_Status']
 
+    params = load_params()
+
     # ── 5-fold cross-validation ───────────────────────────────────────────────
-    # Stratified so each fold preserves the ~70/30 class ratio
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-    model_cv = CatBoostClassifier(
-        iterations=300,
-        learning_rate=0.03,
-        depth=5,
-        class_weights=[2, 1],
-        random_seed=42,
-        verbose=0
-    )
-
     scorers = {
-        'f1_macro':  make_scorer(f1_score, average='macro'),
-        'roc_auc':   make_scorer(roc_auc_score, needs_proba=True),
+        'f1_macro': make_scorer(f1_score, average='macro'),
+        'roc_auc':  'roc_auc',
     }
 
-    cv_results = cross_validate(model_cv, X, y, cv=cv, scoring=scorers, n_jobs=-1)
+    cv_results = cross_validate(CatBoostClassifier(**params), X, y, cv=cv, scoring=scorers, n_jobs=-1)
 
     print("── 5-Fold Cross-Validation ──────────────────────────────")
     print(f"  F1 macro : {cv_results['test_f1_macro'].mean():.3f}  ±  {cv_results['test_f1_macro'].std():.3f}")
@@ -56,15 +64,7 @@ def main():
         X, y, test_size=0.2, stratify=y, random_state=42
     )
 
-    model = CatBoostClassifier(
-        iterations=300,
-        learning_rate=0.03,
-        depth=5,
-        class_weights=[2, 1],
-        random_seed=42,
-        verbose=0
-    )
-
+    model = CatBoostClassifier(**params)
     model.fit(X_train, y_train)
 
     y_proba = model.predict_proba(X_test)[:, 1]
