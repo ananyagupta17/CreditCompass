@@ -1,7 +1,7 @@
-# Loan Prediction System
+# CreditCompass
 
-A machine learning web application that predicts whether a loan should be approved based on applicant details.  
-This end-to-end solution includes data cleaning, feature engineering, model training (CatBoost), and deployment using Flask.
+An end-to-end ML web application that predicts loan eligibility and explains every decision using SHAP.  
+Built with CatBoost, Flask, and deployed on Hugging Face Spaces.
 
 ## Live Demo
 
@@ -22,8 +22,19 @@ This project uses the [Loan Prediction Dataset](https://www.kaggle.com/datasets/
 - **CatBoostClassifier** — chosen over XGBoost and Random Forest based on F1 and AUC on held-out data
 - Decision threshold tuned to 0.36 to reduce false negatives (approving bad loans)
 - **SHAP explainability** — identifies which features drove each prediction
-- **5-fold cross-validated** AUC: 0.83 ± 0.03, F1 macro: 0.80 ± 0.02
+- **5-fold cross-validated** AUC: 0.76 ± 0.04, F1 macro: 0.73 ± 0.03 (hold-out F1 macro: 0.80)
 - Web app built with **Flask**, deployed on **Render**, shows prediction with confidence score
+
+---
+
+## Business Context
+
+Manual loan screening is slow and inconsistent. An automated model that reliably separates eligible applicants from risky ones has direct financial impact:
+
+- **False Positives (bad loan approved):** the bank disburses funds to an applicant likely to default — direct capital loss, typically 5–10× more costly than a missed opportunity.
+- **False Negatives (good loan rejected):** a creditworthy customer is turned away — lost interest revenue and customer acquisition cost wasted.
+
+This model is tuned with a **0.36 decision threshold** and **class weights [2, 1]** to prioritise catching bad loans (higher precision on rejections) while still approving 95% of genuinely eligible applicants. At scale across thousands of applications, shifting the false positive rate by even a few percentage points meaningfully reduces portfolio default exposure.
 
 ---
 
