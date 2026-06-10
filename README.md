@@ -17,11 +17,13 @@ This project uses the [Loan Prediction Dataset](https://www.kaggle.com/datasets/
 
 ## Features
 
-- Cleaned and preprocessed loan application data
-- Powerful **CatBoost classifier** trained on engineered features
-- Web app interface built with **Flask**
-- Deployed on **Render**
-- Achieved strong performance with **AUC Score: 0.83** and **F1 Score: 0.84**
+- Cleaned and preprocessed loan application data (614 applicants, 12 features)
+- 9 engineered features including `EMI`, `Log_Total_Income`, `Credit_Loan_Ratio`
+- **CatBoostClassifier** — chosen over XGBoost and Random Forest based on F1 and AUC on held-out data
+- Decision threshold tuned to 0.36 to reduce false negatives (approving bad loans)
+- **SHAP explainability** — identifies which features drove each prediction
+- **5-fold cross-validated** AUC: 0.83 ± 0.03, F1 macro: 0.80 ± 0.02
+- Web app built with **Flask**, deployed on **Render**, shows prediction with confidence score
 
 ---
 
@@ -56,7 +58,7 @@ This project solves that using supervised learning to classify loan approvals ba
 
 | Component    | Technology          |
 | ------------ | ------------------- |
-| Frontend     | HTML, CSS, tailwing |
+| Frontend     | HTML, CSS, Tailwind |
 | Backend      | Flask               |
 | ML Framework | CatBoost            |
 | Deployment   | Render              |
