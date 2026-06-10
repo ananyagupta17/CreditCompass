@@ -41,10 +41,15 @@ def predict():
 
     y_proba = model.predict_proba(df)[:, 1]
     threshold = 0.36
-    y_pred = (y_proba >= threshold).astype(int)[0]
+    prob = float(y_proba[0])
+    y_pred = int(prob >= threshold)
 
-    result = "Loan Approved" if y_pred == 1 else "Loan Rejected"
-    return render_template("result.html", prediction=result)
+    approved = y_pred == 1
+    result = "Loan Approved" if approved else "Loan Rejected"
+    # Confidence = probability of whichever outcome was predicted
+    confidence = round(prob * 100, 1) if approved else round((1 - prob) * 100, 1)
+
+    return render_template("result.html", prediction=result, confidence=confidence, approved=approved)
 
 if __name__ == "__main__":
     app.run(debug=True)
