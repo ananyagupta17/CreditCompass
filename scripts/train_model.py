@@ -4,56 +4,79 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 import os
+import numpy as np
 import pandas as pd
-import pickle 
+import pickle
 from src.preprocessing import preprocess_data
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
+from sklearn.metrics import classification_report, make_scorer, f1_score, roc_auc_score
 from catboost import CatBoostClassifier
+
+THRESHOLD = 0.36
+
+
+def threshold_predict(estimator, X):
+    return (estimator.predict_proba(X)[:, 1] >= THRESHOLD).astype(int)
 
 
 def main():
-    # Load and preprocess data
     df = pd.read_csv("data/Train.csv")
     df = preprocess_data(df)
 
-    # Split features and target
     X = df.drop('Loan_Status', axis=1)
     y = df['Loan_Status']
 
-    # Train-test split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, stratify=y, random_state=42
-    )
+    # ── 5-fold cross-validation ───────────────────────────────────────────────
+    # Stratified so each fold preserves the ~70/30 class ratio
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-    # Initialize CatBoost model
-    model = CatBoostClassifier(
+    model_cv = CatBoostClassifier(
         iterations=300,
         learning_rate=0.03,
         depth=5,
-        class_weights=[2, 1],  # Handling class imbalance
+        class_weights=[2, 1],
         random_seed=42,
         verbose=0
     )
 
-    # Fit model
+    scorers = {
+        'f1_macro':  make_scorer(f1_score, average='macro'),
+        'roc_auc':   make_scorer(roc_auc_score, needs_proba=True),
+    }
+
+    cv_results = cross_validate(model_cv, X, y, cv=cv, scoring=scorers, n_jobs=-1)
+
+    print("── 5-Fold Cross-Validation ──────────────────────────────")
+    print(f"  F1 macro : {cv_results['test_f1_macro'].mean():.3f}  ±  {cv_results['test_f1_macro'].std():.3f}")
+    print(f"  AUC-ROC  : {cv_results['test_roc_auc'].mean():.3f}  ±  {cv_results['test_roc_auc'].std():.3f}")
+    print()
+
+    # ── Final train/test split for hold-out evaluation ────────────────────────
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, stratify=y, random_state=42
+    )
+
+    model = CatBoostClassifier(
+        iterations=300,
+        learning_rate=0.03,
+        depth=5,
+        class_weights=[2, 1],
+        random_seed=42,
+        verbose=0
+    )
+
     model.fit(X_train, y_train)
 
-    # Predict with threshold
     y_proba = model.predict_proba(X_test)[:, 1]
-    cat_thresh = 0.36
-    y_pred = (y_proba >= cat_thresh).astype(int)
+    y_pred = (y_proba >= THRESHOLD).astype(int)
 
-    # Print classification metrics
-    print("Classification Report:\n")
+    print("── Hold-out Test Set ────────────────────────────────────")
     print(classification_report(y_test, y_pred))
 
-   
-    # Save model
     with open("models/catboost_model.pkl", "wb") as f:
         pickle.dump(model, f)
 
-    print(" Model saved to 'models/catboost_model.pkl'")
+    print("Model saved to 'models/catboost_model.pkl'")
 
 
 if __name__ == "__main__":
