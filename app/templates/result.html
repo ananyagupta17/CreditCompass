@@ -7,14 +7,44 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
   <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md text-center">
-    <h2 class="text-2xl font-bold text-indigo-600 mb-4">Loan Prediction Result</h2>
-    
-    <p class="text-lg text-gray-700 font-medium mb-6">
-      {{ prediction }}
-    </p>
 
-    <a href="/" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300">
-      Go Back
+    {% if approved %}
+      <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <h2 class="text-2xl font-bold text-green-600 mb-2">{{ prediction }}</h2>
+    {% else %}
+      <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </div>
+      <h2 class="text-2xl font-bold text-red-600 mb-2">{{ prediction }}</h2>
+    {% endif %}
+
+    <p class="text-gray-500 text-sm mb-6">Model confidence in this decision</p>
+
+    <!-- Confidence bar -->
+    <div class="mb-2 flex justify-between text-sm font-medium text-gray-600">
+      <span>Confidence</span>
+      <span>{{ confidence }}%</span>
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-3 mb-6">
+      {% if approved %}
+        <div class="h-3 rounded-full bg-green-500" id="conf-bar" data-width="{{ confidence }}"></div>
+      {% else %}
+        <div class="h-3 rounded-full bg-red-500" id="conf-bar" data-width="{{ confidence }}"></div>
+      {% endif %}
+    </div>
+    <script>
+      var bar = document.getElementById('conf-bar');
+      bar.style.width = bar.dataset.width + '%';
+    </script>
+
+    <a href="/" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-300">
+      Try Another
     </a>
   </div>
 </body>
